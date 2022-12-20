@@ -1241,9 +1241,7 @@ class RedditFooter(CachedTemplate):
     def __init__(self):
         self.nav = [
             NavMenu([
-                    NavButton(_("welcome to saidit"), "/s/SaidIt/comments/37r/welcome_to_saiditnet/"),
                     NavButton(_("official sub"), "/s/SaidIt"),
-                    NavButton(_("canary"), "/s/SaiditCanary"),
                     NavButton(_("wiki & faq"), "/wiki/index", sr_path=False),
                 ],
                 title = _("about"),
@@ -1254,7 +1252,6 @@ class RedditFooter(CachedTemplate):
                     NavButton(_("report spam and site abuse"), "/message/compose?to=%2Fs%2Fsaidit", sr_path=False),
                     NavButton(_("list of subs"), "/subs", sr_path=False),
                     NavButton(_("contact"), "/s/help"),
-                    NavButton(_("terms & content policy"), "/s/SaidIt/comments/j1/the_saiditnet_terms_and_content_policy/"),
                 ],
                 title = _("help"),
                 type = "flat_vert",
@@ -1262,18 +1259,14 @@ class RedditFooter(CachedTemplate):
 
             NavMenu([
 
-                    OffsiteButton(_("open source code"), "https://github.com/libertysoft3/saidit", retain_extension=False),
-                    OffsiteButton(_("apps & clients"), "https://saidit.net/s/SaidIt/wiki/index#wiki_apps_.26amp.3B_clients"),
-                    OffsiteButton(_("NAB mirror of saidit"), "https://notabug.io/t/saidit.all"),
-                    OffsiteButton(_("saidit mirror of NAB"), "https://notabug.saidit.net"),
+                    OffsiteButton(_("FANGTANG Official Website"), "https://rdpstudio.top"),
                 ],
                 title = _("tech"),
                 type = "flat_vert",
                 separator = ""),
 
             NavMenu([
-                    OffsiteButton(_("patreon"), "https://www.patreon.com/SaidIt", retain_extension=False),
-                    OffsiteButton(_("cryptocurrency"), "https://saidit.net/s/SaidIt/comments/jf/cryptocurrency_support_for_saiditnet/"),
+                    OffsiteButton(_("afdian"), "https://afdian.net/a/monterey", retain_extension=False),
                 ],
                 title = _("donate"),
                 type = "flat_vert",
