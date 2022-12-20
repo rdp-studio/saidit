@@ -28,7 +28,8 @@ services:
     restart: always
 
   cassandra:
-    image: reddit/cassandra:single-1.2.19-v1
+    #image: reddit/cassandra:single-1.2.19-v1
+    image: rook/cassandra:v1.2.7-29.g61ffcf0
     ports:
       - 9160:9160
     volumes:
