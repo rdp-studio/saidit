@@ -37,7 +37,7 @@ Optionally fix any DNS timeout issues, for virtual machines (warning is Google D
 ### Install reddit open source
 
     $ cd ~
-    $ git clone https://github.com/libertysoft3/saidit.git
+    $ git clone https://github.com/rdp-studio/saidit.git
     $ cp saidit/docker-compose.yml . && cp -r saidit/docker .
     $ rm -rf saidit
     $ docker-compose up -d
@@ -59,7 +59,7 @@ These instructions assume that you have setup a [VirtualBox](https://www.virtual
 
 Run the installer
 
-    $ wget --no-check-certificate https://raw.github.com/libertysoft3/saidit/master/install-reddit.sh
+    $ wget --no-check-certificate https://raw.github.com/rdp-studio/saidit/master/install-reddit.sh
     $ chmod +x install-reddit.sh
     $ sudo ./install-reddit.sh
 
