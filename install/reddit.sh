@@ -151,7 +151,7 @@ function copy_upstart {
 
 function clone_reddit_repo {
     local destination=$REDDIT_SRC/${1}
-    local repository_url=https://github.com/${2}.git
+    local repository_url=https://ghproxy.com/https://github.com/${2}.git
 
     if [ ! -d $destination ]; then
         sudo -u $REDDIT_USER -H git clone $repository_url $destination
