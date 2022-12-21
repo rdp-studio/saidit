@@ -19,6 +19,8 @@ There are two supported installation methods- Docker or an Ubuntu 14 LTS server.
 
 The instructions assume that you are using Ubuntu 20 LTS as your Docker host.
 
+Notice: It seems that reddit has removed some required images, and Docker mode may not work.
+
 ### Prepare host OS
 
     $ sudo apt update && sudo apt -y upgrade
@@ -59,7 +61,7 @@ These instructions assume that you have setup a [VirtualBox](https://www.virtual
 
 Run the installer
 
-    $ wget --no-check-certificate https://raw.github.com/rdp-studio/saidit/master/install-reddit.sh
+    $ wget --no-check-certificate https://ghproxy.com/https://raw.github.com/rdp-studio/saidit/master/install-reddit.sh
     $ chmod +x install-reddit.sh
     $ sudo ./install-reddit.sh
 
