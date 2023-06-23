@@ -311,6 +311,8 @@ class Globals(object):
             'known_image_domains',
             'reserved_subdomains',
             'offsite_subdomains',
+            'spam_domains',
+            'banned_domains',
             'TRAFFIC_LOG_HOSTS',
             'exempt_login_user_agents',
             'autoexpand_media_types',

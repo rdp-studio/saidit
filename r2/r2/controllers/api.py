@@ -570,9 +570,9 @@ class ApiController(RedditController):
             ban = is_banned_domain(url)
             if ban:
                 g.stats.simple_event('spam.domainban.link_url')
-                admintools.spam(l, banner = "domain (%s)" % ban.banmsg)
-                hooks.get_hook('banned_domain.submit').call(item=l, url=url,
-                                                            ban=ban)
+                admintools.spam(l, banner = "domain (%s)" % ban)
+                #hooks.get_hook('banned_domain.submit').call(item=l, url=url,
+                #                                            ban=ban)
 
         if sr.should_ratelimit(c.user, 'link'):
             VRatelimit.ratelimit(rate_user=True, rate_ip = True,

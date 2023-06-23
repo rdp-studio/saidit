@@ -24,7 +24,7 @@ from r2.lib import amqp
 from r2.lib.db import tdb_cassandra
 from r2.lib.db.thing import NotFound
 from r2.lib.errors import MessageError
-from r2.lib.utils import tup, fetch_things2
+from r2.lib.utils import tup, fetch_things2, domain
 from r2.lib.filters import websafe
 from r2.lib.hooks import HookRegistrar
 from r2.models import (
@@ -418,10 +418,20 @@ def update_gold_users():
 
 
 def is_banned_domain(dom):
-    return None
+    dom = domain(dom)
+    banned_domains = getattr(g, 'spam_domains', None)
+    if banned_domains and dom in banned_domains:
+        return 'banned domain'
+    else:
+        return None
 
 def is_shamed_domain(dom):
-    return False, None, None
+    dom = domain(dom)
+    banned_domains = getattr(g, 'banned_domains', None)
+    if banned_domains and dom in banned_domains:
+        return True, dom, 'banned domain'
+    else:
+        return False, None, None
 
 def bans_for_domain_parts(dom):
     return []
