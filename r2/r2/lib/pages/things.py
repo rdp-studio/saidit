@@ -225,6 +225,7 @@ class LinkButtons(PrintableButtons):
                                   show_subreddit_mute = show_subreddit_mute,
                                   muted = thing.muted,
                                   show_block_user=thing.show_block_user,
+                                  thing_takendown=thing_takendown,
                                   **kw)
 
 class CommentButtons(PrintableButtons):
@@ -332,6 +333,7 @@ class CommentButtons(PrintableButtons):
                                   show_subreddit_mute = show_subreddit_mute,
                                   muted = thing.muted,
                                   hide_block_user=thing.hide_block_user,
+                                  thing_takendown=thing_takendown,
         )
 
 class MessageButtons(PrintableButtons):

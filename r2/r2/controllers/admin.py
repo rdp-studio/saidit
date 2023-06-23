@@ -158,3 +158,45 @@ class AdminToolController(RedditController):
         elif not victim.name in g.admins:
             victim.spiderbanned = True
         victim._commit()
+
+    @noresponse(
+        VAdmin(),
+        VModhash(),
+        thing=VByName('id')
+    )
+    def POST_admin_takedown(self, thing):
+        if thing.admin_takedown:
+            return
+
+        # Backup the old content so we can undo this later
+        if isinstance(thing, Link) and thing.is_self:
+            thing.backup_selftext = thing.selftext
+        else:
+            thing.backup_body = thing.body
+            thing.body = '[Removed by SaidIt]'
+
+        thing.is_self = True
+        thing.selftext = '[Removed by SaidIt]'
+        thing.admin_takedown = True
+        thing._commit()
+
+    @noresponse(
+        VAdmin(),
+        VModhash(),
+        thing=VByName('id')
+    )
+    def POST_admin_untakedown(self, thing):
+        if not thing.admin_takedown:
+            return
+
+        if isinstance(thing, Link):
+            if getattr(thing, 'backup_selftext', None):
+                thing.selftext = thing.backup_selftext
+            else:
+                thing.selftext=''
+                thing.is_self = False
+        else:
+            thing.body = thing.backup_body
+
+        thing.admin_takedown = False
+        thing._commit()

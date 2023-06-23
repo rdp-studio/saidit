@@ -66,6 +66,9 @@ def make_map(config):
     mc('/api/admin/unsuspend_user', controller='admintool', action='unsuspend_user')
     mc('/api/admin/spiderban_user', controller='admintool', action='spiderban_user')
 
+    mc('/api/admin/admin_takedown', controller='admintool', action='admin_takedown')
+    mc('/api/admin/admin_untakedown', controller='admintool', action='admin_untakedown')
+
     mc('/robots.txt', controller='robots', action='robots')
     mc('/crossdomain', controller='robots', action='crossdomain')
 
