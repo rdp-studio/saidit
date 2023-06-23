@@ -129,7 +129,7 @@ from r2.lib.csrf import csrf_exempt
 from r2.lib.voting import cast_vote
 
 from r2.models import wiki
-from r2.models.ip import set_account_ip
+# from r2.models.ip import set_account_ip
 from r2.models.recommend import AccountSRFeedback, FEEDBACK_ACTIONS
 from r2.models.rules import SubredditRules
 from r2.models.vote import Vote
@@ -3828,7 +3828,7 @@ class ApiController(RedditController):
 
         # add this ip to the user's account so they can sign in even if
         # their account is being brute forced by a third party.
-        set_account_ip(user, request.ip, c.start_time)
+        # set_account_ip(user, request.ip, c.start_time)
 
         # if the token is for the current user, their cookies will be
         # invalidated and they'll have to log in again.
