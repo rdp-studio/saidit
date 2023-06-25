@@ -1845,7 +1845,7 @@ class AllSR(FakeSubreddit):
         # NOTE: sr.allow_top does not affect or filter /s/all/new, in accordance with NewController keep_fn() which does
         #       not check .discoverable.
         filtered_sr_ids = set()
-        if g.allsr_prefilter_allow_top and not (c.user_is_loggedin and c.user_is_admin):
+        if g.allsr_prefilter_allow_top and not (c.user_is_loggedin and (c.user_is_admin or c.user.pref_notall_enabled)):
             if sort != 'new' or (sort == 'new' and g.allow_top_affects_new):
                 from r2.lib.utils import fetch_things2
                 q2 = Subreddit._query(Subreddit.c.allow_top==False,

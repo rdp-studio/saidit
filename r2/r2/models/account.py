@@ -174,6 +174,7 @@ class Account(Thing):
                      pref_chat_client_user=g.chat_default_username,
                      pref_chat_client_password='',
                      pref_subscriptions_unsubscribe='subs_do_nothing',
+                     pref_notall_enabled=False,
                      pref_site_index=g.site_index_user_configurable_default,
                      pref_site_theme=g.live_config['site_theme_default'],
                      pref_lightswitch=False if g.live_config['site_theme_lightswitch_default'] == 'off' else True,

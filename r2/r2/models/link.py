@@ -1553,7 +1553,7 @@ class Comment(Thing, Printable):
                 return False
 
         # CUSTOM: allow_top filtering for /s/all/comments
-        if g.allow_top_affects_new and not wrapped.subreddit.allow_top and (isinstance(c.site, AllSR) or (isinstance(c.site, DynamicSR) and c.site.name == g.all_name)):
+        if g.allow_top_affects_new and not wrapped.subreddit.allow_top and (isinstance(c.site, AllSR) or (isinstance(c.site, DynamicSR) and c.site.name == g.all_name)) and not (c.user_is_loggedin and c.user.pref_notall_enabled):
             return False
 
         return True

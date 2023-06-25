@@ -493,6 +493,8 @@
         <p>
           ${_wsf("reset subscriptions %(sort)s", sort=unsafe(capture(unsubscribe_actions_options)))}
         </p>
+        <br/>
+        ${checkbox(_("include notall subs on /s/all"), "notall_enabled")}
     </td>
     </tr>
 
