@@ -421,9 +421,9 @@ def is_banned_domain(dom):
     dom = domain(dom)
     banned_domains = getattr(g, 'spam_domains', None)
     if banned_domains and dom in banned_domains:
-        return 'banned domain'
+        return True
     else:
-        return None
+        return False
 
 def is_shamed_domain(dom):
     dom = domain(dom)

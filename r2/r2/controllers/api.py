@@ -414,6 +414,15 @@ class ApiController(RedditController):
                 VNotInTimeout().run(target=to)
             m, inbox_rel = Message._new(c.user, to, subject, body, request.ip)
 
+        for domain in g.banned_domains:
+            if domain in body or domain in subject:
+                g.stats.simple_event('spam.domainban.message')
+                admintools.spam(m, banner = "banned domain")
+        for domain in g.spam_domains:
+            if domain in body or domain in subject:
+                g.stats.simple_event('spam.domainban.message')
+                admintools.spam(m, banner = "banned domain")
+
         form.set_text(".status", _("your message has been delivered"))
         form.set_inputs(to = "", subject = "", text = "", captcha="")
         queries.new_message(m, inbox_rel)
@@ -567,12 +576,20 @@ class ApiController(RedditController):
         )
 
         if not is_self:
-            ban = is_banned_domain(url)
-            if ban:
+            if is_banned_domain(url):
                 g.stats.simple_event('spam.domainban.link_url')
-                admintools.spam(l, banner = "domain (%s)" % ban)
+                admintools.spam(l, banner = "banned domain")
                 #hooks.get_hook('banned_domain.submit').call(item=l, url=url,
                 #                                            ban=ban)
+
+        for domain in g.banned_domains:
+            if (is_self and domain in selftext) or domain in title:
+                g.stats.simple_event('spam.domainban.link_text')
+                admintools.spam(l, banner = "banned domain")
+        for domain in g.spam_domains:
+            if (is_self and domain in selftext) or domain in title:
+                g.stats.simple_event('spam.domainban.link_text')
+                admintools.spam(l, banner = "banned domain")
 
         if sr.should_ratelimit(c.user, 'link'):
             VRatelimit.ratelimit(rate_user=True, rate_ip = True,
@@ -2221,6 +2238,15 @@ class ApiController(RedditController):
             item, inbox_rel = Comment._new(c.user, link, parent_comment,
                                            comment, request.ip)
 
+        for domain in g.banned_domains:
+            if domain in comment:
+                g.stats.simple_event('spam.domainban.comment_body')
+                admintools.spam(item, banner = "banned domain")
+        for domain in g.spam_domains:
+            if domain in comment:
+                g.stats.simple_event('spam.domainban.comment_body')
+                admintools.spam(item, banner = "banned domain")
+
         if is_message:
             queries.new_message(item, inbox_rel)
         else:
@@ -2340,6 +2366,15 @@ class ApiController(RedditController):
             amqp.add_item('new_message', m._fullname)
 
             queries.new_message(m, inbox_rel)
+
+        for domain in g.banned_domains:
+            if domain in subject or domain in pm_message:
+                g.stats.simple_event('spam.domainban.message')
+                admintools.spam(m, banner = "banned domain")
+        for domain in g.spam_domains:
+            if domain in subject or domain in pm_message:
+                g.stats.simple_event('spam.domainban.message')
+                admintools.spam(m, banner = "banned domain")
 
         g.stats.simple_event('share.email_sent', len(emails))
         g.stats.simple_event('share.pm_sent', len(users))
