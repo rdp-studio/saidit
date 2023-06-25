@@ -169,8 +169,9 @@ class AdminToolController(RedditController):
             return
 
         # Backup the old content so we can undo this later
-        if isinstance(thing, Link) and thing.is_self:
-            thing.backup_selftext = thing.selftext
+        if isinstance(thing, Link):
+            if thing.is_self:
+                thing.backup_selftext = thing.selftext
         else:
             thing.backup_body = thing.body
             thing.body = '[Removed by SaidIt]'
