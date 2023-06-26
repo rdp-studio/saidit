@@ -419,16 +419,14 @@ def update_gold_users():
 
 def is_banned_domain(dom):
     dom = domain(dom)
-    banned_domains = getattr(g, 'spam_domains', None)
-    if banned_domains and dom in banned_domains:
+    if dom in g.spam_domains:
         return True
     else:
         return False
 
 def is_shamed_domain(dom):
     dom = domain(dom)
-    banned_domains = getattr(g, 'banned_domains', None)
-    if banned_domains and dom in banned_domains:
+    if dom in g.banned_domains:
         return True, dom, 'banned domain'
     else:
         return False, None, None
