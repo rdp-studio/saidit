@@ -362,7 +362,7 @@ class WikiController(RedditController):
             c.wiki_base_url = join_urls('/', 'wiki')
             c.wiki_api_url = join_urls('/', '/api/wiki')
 
-        c.wiki_id = g.default_sr if frontpage else c.site.name
+        c.wiki_id = g.default_sr if frontpage else c.site.display_name_abbr
 
         self.editconflict = False
         c.is_wiki_mod = (

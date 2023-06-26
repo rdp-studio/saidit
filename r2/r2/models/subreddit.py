@@ -132,7 +132,10 @@ class BaseSite(object):
 
     @property
     def path(self):
-        return "/" + g.brander_community_abbr + "/%s/" % self.name
+        if self.profile_id:
+            return "/user/%s/" % self.profile_account.name
+        else:
+            return "/" + g.brander_community_abbr + "/%s/" % self.name
 
     @property
     def user_path(self):
@@ -145,6 +148,27 @@ class BaseSite(object):
     @property
     def allows_referrers(self):
         return True
+
+    @property
+    def profile_account(self):
+        if self.profile_id:
+            return Account._byID(self.profile_id)
+        else:
+            return None
+
+    @property
+    def display_name(self):
+        if self.profile_id:
+            return "u/" + self.profile_account.name
+        else:
+            return self.name
+
+    @property
+    def display_name_abbr(self):
+        if self.profile_id:
+            return "u/" + self.profile_account.name
+        else:
+            return "/" + g.brander_community_abbr + "/" + self.name
 
     def is_moderator_with_perms(self, user, *perms):
         if user.is_global_banned:
@@ -275,6 +299,7 @@ class Subreddit(Thing, Printable, BaseSite):
 
         # CUSTOM
         chat_enabled = True,
+        profile_id = 0,
     )
 
     # special attributes that shouldn't set Thing data attributes because they
@@ -437,9 +462,23 @@ class Subreddit(Thing, Printable, BaseSite):
         names, single = tup(names, True)
 
         to_fetch = {}
+        to_fetch_profile = {}
         ret = {}
 
         for name in names:
+            if name.lower().startswith("u/"):
+                from r2.models import Account
+                try:
+                    srid = Account._by_name(name[2:], allow_deleted=True).profile_srid
+                    if srid:
+                        try:
+                            ret[name] = cls._byID(srid)
+                        except:
+                            pass
+                except:
+                    pass
+                continue
+
             try:
                 ascii_only = str(name.decode("ascii", errors="ignore"))
             except UnicodeEncodeError:

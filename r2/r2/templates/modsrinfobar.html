@@ -24,7 +24,7 @@
 
 <div class="titlebox rounded">
   <h1 class="hover redditname">
-    ${plain_link(c.site.name, c.site.user_path, _sr_path=False, _class="hover")}
+    ${plain_link(c.site.display_name, c.site.user_path, _sr_path=False, _class="hover")}
   </h1>
 
   <div class="usertext">

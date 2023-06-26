@@ -67,9 +67,9 @@
         %endif
 
         %if is_spam:
-          <span class="title banned">${sr.name}</span>
+          <span class="title banned">${sr.display_name}</span>
         %else:
-          ${plain_link(sr.name, sr.path, _class="title")}
+          ${plain_link(sr.display_name, sr.path, _class="title")}
         %endif
 
         ${permission_icons(sr)}

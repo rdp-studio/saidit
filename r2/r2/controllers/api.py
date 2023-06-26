@@ -717,7 +717,7 @@ class ApiController(RedditController):
         See also: [/api/friend](#POST_api_friend).
 
         """
-        if container and container.is_moderator(c.user):
+        if container and container.is_moderator(c.user) and container.profile_id != c.user._id:
             container.remove_moderator(c.user)
             ModAction.create(container, c.user, 'removemoderator', target=c.user,
                              details='remove_self')
@@ -843,6 +843,9 @@ class ApiController(RedditController):
                 if c.user._spam:
                     return
                 VNotInTimeout().run(action_name=action, target=victim)
+            if type == 'moderator' and container.profile_id == c.user._id:
+                # Don't let someone be removed as a mod of their own profile
+                return
         else:
             container = VByName('container').run(container)
             if not container:
@@ -3064,6 +3067,12 @@ class ApiController(RedditController):
             # Don't allow user in timeout to create a new subreddit
             VNotInTimeout().run(action_name="createsubreddit", target=None)
 
+            # Don't let anyone create someone else's profile sub!
+            if name.lower().startswith("u_"):
+                if name[2:].lower() != c.user.name.lower():
+                    abort(403)
+                kw["profile_id"] = c.user._id
+
             #sending kw is ok because it was sanitized above
             sr = Subreddit._new(name = name, author_id = c.user._id,
                                 ip=request.ip, **kw)
@@ -3073,8 +3082,12 @@ class ApiController(RedditController):
 
             hooks.get_hook("subreddit.new").call(subreddit=sr)
 
-            Subreddit.subscribe_defaults(c.user)
-            sr.add_subscriber(c.user)
+            if name.lower().startswith("u_"):
+                c.user.profile_srid = sr._id
+                c.user._commit()
+            else:
+                Subreddit.subscribe_defaults(c.user)
+                sr.add_subscriber(c.user)
             sr.add_moderator(c.user)
 
             if not sr.hide_contributors:

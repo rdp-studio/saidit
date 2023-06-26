@@ -144,7 +144,7 @@ class WikiBasePage(Reddit):
 
         if page and "title" not in context:
             context["title"] = _("%(page)s - %(site)s") % {
-                "site": c.site.name,
+                "site": c.site.display_name,
                 "page": page}
             page_classes = ['wiki-page-%s' % page.replace('/', '-')]
 
@@ -204,7 +204,7 @@ class WikiRecent(WikiBasePage):
         content = WikiPageRevisions(revisions)
         sr_path = context.get('sr_path')
         if sr_path:
-            context['wikiaction'] = ('revisions', _("Viewing recent revisions for /%s/%s") % (g.brander_community_abbr, c.wiki_id))
+            context['wikiaction'] = ('revisions', _("Viewing recent revisions for %s") % c.wiki_id)
         else:
             context['wikiaction'] = ('revisions', _("Viewing recent revisions for %s") % g.brander_site)
         WikiBasePage.__init__(self, content, showtitle=True, **context)
@@ -214,7 +214,7 @@ class WikiListing(WikiBasePage):
         content = WikiPageListing(pages, linear_pages)
         sr_path = context.get('sr_path')
         if sr_path:
-            context['wikiaction'] = ('pages', _("Viewing pages for /%s/%s") % (g.brander_community_abbr, c.wiki_id))
+            context['wikiaction'] = ('pages', _("Viewing pages for %s") % c.wiki_id)
         else:
             context['wikiaction'] = ('pages', _("Viewing pages for %s") % g.brander_site)
         description = [_("Below is a list of pages in this wiki visible to you in this sub.")]

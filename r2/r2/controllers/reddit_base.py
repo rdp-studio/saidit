@@ -298,6 +298,7 @@ def set_obey_over18():
     c.obey_over18 = request.GET.get("obey_over18") == "true"
 
 valid_ascii_domain = re.compile(r'\A(\w[-\w]*\.)+[\w]+\Z')
+user_pattern = re.compile(r'^/user/([^/]{2,})')
 def set_subreddit():
     #the r parameter gets added by javascript for API requests so we
     #can reference c.site in api.py
@@ -331,6 +332,18 @@ def set_subreddit():
                 domain = ".".join((g.domain_prefix, domain))
             path = '%s://%s%s' % (g.default_scheme, domain, sr.path)
             abort(301, location=BaseController.format_output_url(path))
+        else:
+            # Set user profile sub if available
+            path = request.environ.get("PATH_INFO")
+            uname = user_pattern.match(path)
+            if uname:
+                uname = uname.groups()[0]
+                try:
+                    vuser = Account._by_name(uname, allow_deleted=True)
+                    if vuser.profile_srid:
+                        c.site = vuser.profile_sr
+                except:
+                    pass
     elif '+' in sr_name:
         name_filter = lambda name: Subreddit.is_valid_name(name,
             allow_language_srs=True)

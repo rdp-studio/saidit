@@ -419,7 +419,7 @@ class AdvertTraffic(RedditTraffic):
 
 class SubredditTraffic(RedditTraffic):
     def __init__(self):
-        RedditTraffic.__init__(self, "/" + g.brander_community_abbr + "/" + c.site.name)
+        RedditTraffic.__init__(self, c.site.display_name_abbr)
 
         if c.user_is_sponsor:
             fullname = c.site._fullname

@@ -180,6 +180,7 @@ class Account(Thing):
                      pref_lightswitch=False if g.live_config['site_theme_lightswitch_default'] == 'off' else True,
                      pref_sendreplies=True,
                      spiderbanned=False,
+                     profile_srid = 0,
                      )
     _preference_attrs = tuple(k for k in _defaults.keys()
                               if k.startswith("pref_"))
@@ -400,7 +401,7 @@ class Account(Thing):
                 min_last_created = datetime.today() - timedelta(days=int(g.live_config["create_sr_ratelimit_once_per_days"]))
                 srs = Subreddit._byID(user_sr_ids)
                 for sr in srs.itervalues():
-                    if sr.author_id == self._id and sr._date > min_last_created.replace(tzinfo=g.tz) and not c.user_is_admin and not self.employee:
+                    if sr.author_id == self._id and sr._date > min_last_created.replace(tzinfo=g.tz) and not c.user_is_admin and not self.employee and sr._id != self.profile_srid:
                         # g.log.warning("!!! dbg: user %s cannot create sub, created %s at %s, once every %s days max" % (self.name, sr.name, sr._date, g.live_config["create_sr_ratelimit_once_per_days"]))
                         return False
 
@@ -798,6 +799,14 @@ class Account(Thing):
     def is_global_banned(self):
         return GlobalBan._user_banned(self._id)
 
+    @property
+    def profile_sr(self):
+        if self.profile_srid:
+            from r2.models import Subreddit
+            return Subreddit._byID(self.profile_srid)
+        else:
+            return None
+
 class FakeAccount(Account):
     _nodb = True
     pref_no_profanity = True
@@ -956,6 +965,8 @@ def register(name, password, registration_ip):
     # get a lock for registering an Account with this name to prevent
     # simultaneous operations from creating multiple Accounts with the same name
     with g.make_lock("account_register", "register_%s" % name.lower()):
+        from r2.models import Subreddit
+        from r2.lib.db import queries
         try:
             account = Account._by_name(name)
             raise AccountExists
@@ -980,11 +991,34 @@ def register(name, password, registration_ip):
                 account._spam = True
             except:
                 pass
+
             account._commit()
 
             # update Account._by_name to pick up this new name->Account
             Account._by_name(name, _update=True)
             Account._by_name(name, allow_deleted=True, _update=True)
+
+            profile_sr = Subreddit._new(name = "u_" + account.name,
+                                        title = "u_" + account.name,
+                                        author_id = account._id,
+                                        ip=registration_ip,
+                                        type = 'restricted',
+                                        profile_id = account._id)
+
+            profile_sr._commit()
+
+            hooks.get_hook("subreddit.new").call(subreddit=profile_sr)
+
+            profile_sr.add_moderator(account)
+
+            if not profile_sr.hide_contributors:
+                profile_sr.add_contributor(account)
+
+            queries.new_subreddit(profile_sr)
+            profile_sr.update_search_index()
+
+            account.profile_srid = profile_sr._id
+            account._commit()
 
             return account
 

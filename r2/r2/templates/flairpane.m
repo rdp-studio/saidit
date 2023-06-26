@@ -22,7 +22,7 @@
 
 <%namespace name="utils" file="utils.m"/>
 <div class="flair-settings fancy-settings">
-  <h1>${_("flair settings")} | &#32;<strong>${c.site.name}</strong></h1>
+  <h1>${_("flair settings")} | &#32;<strong>${c.site.display_name}</strong></h1>
 
   <div class="pretty-form">
     <form method="post" action="/post/flairconfig"

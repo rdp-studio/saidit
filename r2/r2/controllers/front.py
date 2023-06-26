@@ -977,7 +977,7 @@ class FrontController(RedditController):
             "link": _("Posts only"),
             "comment": _("Comments only"),
         }
-        title_string = _("Rules for " + g.brander_community_abbr + "/%(subreddit)s") % { "subreddit" : c.site.name }
+        title_string = _("Rules for " + "%(subreddit)s") % { "subreddit" : c.site.display_name_abbr }
         content = Rules(
             title=title_string,
             kind_labels=kind_labels,
