@@ -5384,35 +5384,8 @@ class ApiController(RedditController):
                    recipient=VExistingUname("recipient"),
                    notes=VLength("notes", max_length = 1000, empty_error=None))
     def POST_editglobalban(self, form, jquery, globalban, colliding_globalban, recipient, notes):
-
-        # INVALID_OPTION is set by VGlobalBanByUsername
-        if form.has_errors("recipient", errors.INVALID_OPTION):
-            form.set_text(".status", "user already globally banned")
-            return
-
-        if form.has_error():
-            return
-
-        if recipient is None:
-            form.set_text(".status", "user does not exist")
-            return
-
-        if globalban is None:
-            GlobalBan._new(recipient._id, notes)
-            form.set_html(".status", "saved, <a href='#' onclick='location.reload();'>reload</a> to see changes")
-
-            if g.globalban_vote_rollback:
-                min_account_age = timedelta(days=g.globalban_vote_rollback_account_age_days)
-                if g.globalban_vote_rollback_account_age_days == -1:
-                    admintools.rollback_account_votes(recipient)
-                elif recipient._age < timedelta(days=1) or recipient._age <= min_account_age:
-                    admintools.rollback_account_votes(recipient)
-            return
-
-        globalban.notes = notes
-        globalban._commit()
-        form.set_html(".status", _('saved, <a href="#" onclick="location.reload();">reload</a> to see changes'))
-
+        form.set_text(".status", "global bans are deprecated, use the ban tools on the user's profile page instead")
+        return
 
     @validatedForm(VAdmin(),
                 VModhash(),
