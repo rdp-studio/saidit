@@ -5495,5 +5495,6 @@ class ApiController(RedditController):
 
         admintools.spam_account_links(recipient)
         admintools.spam_account_comments(recipient)
+        admintools.spam_account_subs(recipient)
 
         form.set_html(".status", _('somebody set up us the bomb'))

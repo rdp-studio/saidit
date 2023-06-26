@@ -337,6 +337,26 @@ class AdminTools(object):
                         banner=None,
                         train_spam=True)
 
+    def spam_account_subs(self, account, query_limit=10000, spam_limit=500):
+        from r2.lib.db.operators import asc, desc, timeago
+
+        q = Subreddit._query(Subreddit.c.author_id == account._id,
+            Subreddit.c._spam == False,
+            sort=desc('_date'),
+            data=False)
+        q._limit = query_limit
+        things = list(q)
+
+        processed = 0
+        for item in things:
+            if processed < spam_limit:
+                processed += 1
+                admintools.spam(item,
+                                auto=False,
+                                moderator_banned=False,
+                                banner=None,
+                                train_spam=True)
+
 admintools = AdminTools()
 
 def cancel_subscription(subscr_id):
