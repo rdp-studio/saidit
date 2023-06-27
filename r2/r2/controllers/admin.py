@@ -170,14 +170,18 @@ class AdminToolController(RedditController):
 
         # Backup the old content so we can undo this later
         if isinstance(thing, Link):
+            thing.backup_title = thing.title
+            thing.title = '[ Removed by SaidIt ]'
+
             if thing.is_self:
                 thing.backup_selftext = thing.selftext
+            else:
+                thing.is_self = True
+            thing.selftext = '[ Removed by SaidIt for violating the content policy. ]'
         else:
             thing.backup_body = thing.body
-            thing.body = '[Removed by SaidIt]'
+            thing.body = '[ Removed by SaidIt for violating the content policy. ]'
 
-        thing.is_self = True
-        thing.selftext = '[Removed by SaidIt]'
         thing.admin_takedown = True
         thing._commit()
 
@@ -191,6 +195,8 @@ class AdminToolController(RedditController):
             return
 
         if isinstance(thing, Link):
+            thing.title = thing.backup_title
+
             if getattr(thing, 'backup_selftext', None):
                 thing.selftext = thing.backup_selftext
             else:
