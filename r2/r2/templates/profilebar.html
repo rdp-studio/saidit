@@ -128,11 +128,6 @@
     </span>
   </div>
 
-  %if thing.viewing_self:
-    <br>
-    <a href="/account-activity">Account IP activity</a>
-  %endif
-
   %if c.user_is_admin:
     <br>
     <a class="ban-tools-expander" id="ban-tools-expander" href="javascript:void(0);" onclick="expandUserBanTools();">+ Show ban tools</a>
