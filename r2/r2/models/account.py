@@ -999,7 +999,7 @@ def register(name, password, registration_ip):
             Account._by_name(name, allow_deleted=True, _update=True)
 
             profile_sr = Subreddit._new(name = "u_" + account.name,
-                                        title = "u_" + account.name,
+                                        title = account.name,
                                         author_id = account._id,
                                         ip=registration_ip,
                                         type = 'restricted',
