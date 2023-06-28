@@ -1462,6 +1462,7 @@ class RedditController(OAuth2ResourceController):
                         _("gold members only"),
                         content=pages.GoldOnlyInterstitial(
                             sr_name=c.site.name,
+                            sr_display_name=c.site.display_name,
                             sr_description=c.site.public_description,
                         ),
                     )
@@ -1472,6 +1473,7 @@ class RedditController(OAuth2ResourceController):
                         _("private"),
                         content=pages.PrivateInterstitial(
                             sr_name=c.site.name,
+                            sr_display_name=c.site.display_name,
                             sr_description=c.site.public_description,
                         ),
                     )
