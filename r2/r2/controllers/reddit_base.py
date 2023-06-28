@@ -1482,7 +1482,7 @@ class RedditController(OAuth2ResourceController):
                 elif c.site.profile_id:
                     self.allow_stylesheets = False
                     if not request.path.startswith('/user/'):
-                        self.abort403()
+                        self.abort404()
                 else:
                     if c.render_style != 'html':
                         self.abort403()
