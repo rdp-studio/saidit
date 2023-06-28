@@ -956,6 +956,10 @@ class Subreddit(Thing, Printable, BaseSite):
 
     def is_allowed_to_view(self, user):
         """Returns whether user can view based on permissions and settings"""
+        if self.profile_id:
+            vuser = self.profile_account
+            if getattr(user, '_id', 0) != vuser._id and (vuser._deleted or vuser._spam or (vuser.in_timeout and not vuser.timeout_expiration)):
+                return False
         if self.type in ('public', 'restricted',
                          'gold_restricted', 'archived'):
             return True

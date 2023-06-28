@@ -1467,7 +1467,7 @@ class RedditController(OAuth2ResourceController):
                     )
                     request.environ['usable_error_content'] = errpage.render()
                     self.abort403()
-                elif not allowed_to_view:
+                elif not allowed_to_view and (c.site.type == 'private' or c.site.type == 'employees_only'):
                     errpage = pages.InterstitialPage(
                         _("private"),
                         content=pages.PrivateInterstitial(
@@ -1477,6 +1477,10 @@ class RedditController(OAuth2ResourceController):
                     )
                     request.environ['usable_error_content'] = errpage.render()
                     self.abort403()
+                elif c.site.profile_id:
+                    self.allow_stylesheets = False
+                    if not request.path.startswith('/user/'):
+                        self.abort403()
                 else:
                     if c.render_style != 'html':
                         self.abort403()
