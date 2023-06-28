@@ -958,7 +958,7 @@ class Subreddit(Thing, Printable, BaseSite):
         """Returns whether user can view based on permissions and settings"""
         if self.profile_id:
             vuser = self.profile_account
-            if getattr(user, '_id', 0) != vuser._id and (vuser._deleted or vuser._spam or (vuser.in_timeout and not vuser.timeout_expiration)):
+            if getattr(user, '_id', 0) != vuser._id and (vuser._deleted or (vuser._spam and not vuser.banned_profile_visible) or (vuser.in_timeout and not vuser.timeout_expiration)):
                 return False
         if self.type in ('public', 'restricted',
                          'gold_restricted', 'archived'):

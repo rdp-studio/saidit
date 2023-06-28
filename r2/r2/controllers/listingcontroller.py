@@ -1002,11 +1002,6 @@ class UserController(ListingController):
             request.environ['usable_error_content'] = errpage.render()
             return self.abort404()
 
-        # only allow admins to view users with a private profile
-        profile_sr = vuser.profile_sr
-        if profile_sr and not profile_sr.can_view(c.user):
-            return self.abort403()
-
         if c.user_is_admin:
             c.referrer_policy = "always"
 
@@ -1020,6 +1015,11 @@ class UserController(ListingController):
                          c.user_is_admin or
                          c.user_is_sponsor and where == "promoted")):
                 return self.abort404()
+
+        # only allow admins to view users with a private profile
+        profile_sr = vuser.profile_sr
+        if profile_sr and not profile_sr.can_view(c.user):
+            return self.abort403()
 
         if where in ('upvoted', 'downvoted') and not votes_visible(vuser):
             return self.abort403()
