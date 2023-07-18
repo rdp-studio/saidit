@@ -235,6 +235,7 @@ class Globals(object):
             'hot_max_links_per_subreddit',
             'fetch_title_max_download_kb',
             'globalban_vote_rollback_account_age_days',
+            'spamfilter_karma',
         ],
 
         ConfigValue.float: [

@@ -144,6 +144,29 @@ from r2.models.account import Account
 # CUSTOM: Site Theme
 from r2.lib.validator.preferences import set_prefs
 
+def spamfilter_check(thing, account, body, title = ''):
+    if account.link_karma + account.comment_karma >= g.spamfilter_karma:
+        return
+
+    body = body.lower()
+    title = title.lower()
+
+    for domain in g.banned_domains:
+        if domain in body or domain in title:
+            g.stats.simple_event('spam.domainban.message')
+            admintools.spam(thing, banner = "banned domain")
+
+    for domain in g.spam_domains:
+        if domain in body or domain in title:
+            g.stats.simple_event('spam.domainban.message')
+            admintools.spam(thing, banner = "banned domain")
+
+    for phrase in g.forbidden_phrases:
+        phrase = phrase.lower()
+        if phrase in body or phrase in title:
+            g.stats.simple_event('spam.phraseban.message')
+            admintools.spam(thing, banner = "banned phrase")
+
 class ApiminimalController(MinimalController):
     """
     Put API calls in here which don't rely on the user being logged in
@@ -414,21 +437,7 @@ class ApiController(RedditController):
                 VNotInTimeout().run(target=to)
             m, inbox_rel = Message._new(c.user, to, subject, body, request.ip)
 
-        body_lower = body.lower()
-        subject_lower = subject.lower()
-        for domain in g.banned_domains:
-            if domain in body_lower or domain in subject_lower:
-                g.stats.simple_event('spam.domainban.message')
-                admintools.spam(m, banner = "banned domain")
-        for domain in g.spam_domains:
-            if domain in body_lower or domain in subject_lower:
-                g.stats.simple_event('spam.domainban.message')
-                admintools.spam(m, banner = "banned domain")
-        for phrase in g.forbidden_phrases:
-            phrase = phrase.lower()
-            if phrase in body_lower or phrase in subject_lower:
-                g.stats.simple_event('spam.phraseban.message')
-                admintools.spam(m, banner = "banned phrase")
+        spamfilter_check(m, c.user, body, subject)
 
         form.set_text(".status", _("your message has been delivered"))
         form.set_inputs(to = "", subject = "", text = "", captcha="")
@@ -583,27 +592,13 @@ class ApiController(RedditController):
         )
 
         if not is_self:
-            if is_banned_domain(url):
+            if is_banned_domain(url) and c.user.link_karma + c.user.comment_karma < g.spamfilter_karma:
                 g.stats.simple_event('spam.domainban.link_url')
                 admintools.spam(l, banner = "banned domain")
                 #hooks.get_hook('banned_domain.submit').call(item=l, url=url,
                 #                                            ban=ban)
 
-        title_lower = title.lower()
-        selftext_lower = selftext.lower() if is_self else ''
-        for domain in g.banned_domains:
-            if domain in selftext_lower or domain in title_lower:
-                g.stats.simple_event('spam.domainban.link_text')
-                admintools.spam(l, banner = "banned domain")
-        for domain in g.spam_domains:
-            if domain in selftext_lower or domain in title_lower:
-                g.stats.simple_event('spam.domainban.link_text')
-                admintools.spam(l, banner = "banned domain")
-        for phrase in g.forbidden_phrases:
-            phrase = phrase.lower()
-            if phrase in selftext_lower or phrase in title_lower:
-                g.stats.simple_event('spam.phraseban.message')
-                admintools.spam(l, banner = "banned phrase")
+        spamfilter_check(l, c.user, selftext if self else url, title)
 
         if sr.should_ratelimit(c.user, 'link'):
             VRatelimit.ratelimit(rate_user=True, rate_ip = True,
@@ -2255,19 +2250,7 @@ class ApiController(RedditController):
             item, inbox_rel = Comment._new(c.user, link, parent_comment,
                                            comment, request.ip)
 
-        comment_lower = comment.lower()
-        for domain in g.banned_domains:
-            if domain in comment_lower:
-                g.stats.simple_event('spam.domainban.comment_body')
-                admintools.spam(item, banner = "banned domain")
-        for domain in g.spam_domains:
-            if domain in comment_lower:
-                g.stats.simple_event('spam.domainban.comment_body')
-                admintools.spam(item, banner = "banned domain")
-        for phrase in g.forbidden_phrases:
-            if phrase.lower() in comment_lower:
-                g.stats.simple_event('spam.phraseban.message')
-                admintools.spam(item, banner = "banned phrase")
+        spamfilter_check(item, c.user, comment)
 
         if is_message:
             queries.new_message(item, inbox_rel)
@@ -2388,22 +2371,6 @@ class ApiController(RedditController):
             amqp.add_item('new_message', m._fullname)
 
             queries.new_message(m, inbox_rel)
-
-        subject_lower = subject.lower()
-        pm_message_lower = pm_message.lower()
-        for domain in g.banned_domains:
-            if domain in subject_lower or domain in pm_message_lower:
-                g.stats.simple_event('spam.domainban.message')
-                admintools.spam(m, banner = "banned domain")
-        for domain in g.spam_domains:
-            if domain in subject_lower or domain in pm_message_lower:
-                g.stats.simple_event('spam.domainban.message')
-                admintools.spam(m, banner = "banned domain")
-        for phrase in g.forbidden_phrases:
-            phrase = phrase.lower()
-            if phrase in subject_lower or phrase in pm_message_lower:
-                g.stats.simple_event('spam.phraseban.message')
-                admintools.spam(m, banner = "banned phrase")
 
         g.stats.simple_event('share.email_sent', len(emails))
         g.stats.simple_event('share.pm_sent', len(users))
