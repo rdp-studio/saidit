@@ -313,6 +313,7 @@ class Globals(object):
             'offsite_subdomains',
             'spam_domains',
             'banned_domains',
+            'forbidden_phrases',
             'TRAFFIC_LOG_HOSTS',
             'exempt_login_user_agents',
             'autoexpand_media_types',
