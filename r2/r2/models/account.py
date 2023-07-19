@@ -807,6 +807,10 @@ class Account(Thing):
         else:
             return None
 
+    @property
+    def spamfilter_applies(self):
+        return g.spamfilter_karma <= 0 or self.link_karma + self.comment_karma < g.spamfilter_karma
+
 class FakeAccount(Account):
     _nodb = True
     pref_no_profanity = True

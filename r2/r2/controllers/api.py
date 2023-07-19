@@ -141,31 +141,10 @@ from urlparse import urlparse
 from r2.lib.ip_events import account_ids_by_ip
 from r2.models.account import Account
 
+from r2.models.link import spamfilter_check
+
 # CUSTOM: Site Theme
 from r2.lib.validator.preferences import set_prefs
-
-def spamfilter_check(thing, account, body, title = ''):
-    if account.link_karma + account.comment_karma >= g.spamfilter_karma:
-        return
-
-    body = body.lower()
-    title = title.lower()
-
-    for domain in g.banned_domains:
-        if domain in body or domain in title:
-            g.stats.simple_event('spam.domainban.message')
-            admintools.spam(thing, banner = "banned domain")
-
-    for domain in g.spam_domains:
-        if domain in body or domain in title:
-            g.stats.simple_event('spam.domainban.message')
-            admintools.spam(thing, banner = "banned domain")
-
-    for phrase in g.forbidden_phrases:
-        phrase = phrase.lower()
-        if phrase in body or phrase in title:
-            g.stats.simple_event('spam.phraseban.message')
-            admintools.spam(thing, banner = "banned phrase")
 
 class ApiminimalController(MinimalController):
     """
@@ -592,7 +571,7 @@ class ApiController(RedditController):
         )
 
         if not is_self:
-            if is_banned_domain(url) and c.user.link_karma + c.user.comment_karma < g.spamfilter_karma:
+            if is_banned_domain(url) and c.user.spamfilter_applies:
                 g.stats.simple_event('spam.domainban.link_url')
                 admintools.spam(l, banner = "banned domain")
                 #hooks.get_hook('banned_domain.submit').call(item=l, url=url,
@@ -2371,6 +2350,9 @@ class ApiController(RedditController):
             amqp.add_item('new_message', m._fullname)
 
             queries.new_message(m, inbox_rel)
+
+            spamfilter_check(m, c.user, pm_message, subject)
+            spamfilter_check(inbox_rel, c.user, pm_message, subject)
 
         g.stats.simple_event('share.email_sent', len(emails))
         g.stats.simple_event('share.pm_sent', len(users))
