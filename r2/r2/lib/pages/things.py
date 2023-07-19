@@ -57,7 +57,8 @@ class PrintableButtons(Styled):
                  **kw):
         show_ignore = thing.show_reports
         approval_checkmark = getattr(thing, "approval_checkmark", None)
-        show_approve = (thing.show_spam or show_ignore) and not thing._deleted
+        show_approve = (thing.show_spam or show_ignore or
+                        (is_link and approval_checkmark is None)) and not thing._deleted
 
         Styled.__init__(self, style = style,
                         thing = thing,
@@ -224,6 +225,7 @@ class LinkButtons(PrintableButtons):
                                   show_subreddit_mute = show_subreddit_mute,
                                   muted = thing.muted,
                                   show_block_user=thing.show_block_user,
+                                  thing_takendown=thing_takendown,
                                   **kw)
 
 class CommentButtons(PrintableButtons):
@@ -331,6 +333,7 @@ class CommentButtons(PrintableButtons):
                                   show_subreddit_mute = show_subreddit_mute,
                                   muted = thing.muted,
                                   hide_block_user=thing.hide_block_user,
+                                  thing_takendown=thing_takendown,
         )
 
 class MessageButtons(PrintableButtons):

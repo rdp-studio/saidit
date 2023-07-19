@@ -24,7 +24,7 @@ from r2.lib import amqp
 from r2.lib.db import tdb_cassandra
 from r2.lib.db.thing import NotFound
 from r2.lib.errors import MessageError
-from r2.lib.utils import tup, fetch_things2
+from r2.lib.utils import tup, fetch_things2, domain
 from r2.lib.filters import websafe
 from r2.lib.hooks import HookRegistrar
 from r2.models import (
@@ -337,6 +337,26 @@ class AdminTools(object):
                         banner=None,
                         train_spam=True)
 
+    def spam_account_subs(self, account, query_limit=10000, spam_limit=500):
+        from r2.lib.db.operators import asc, desc, timeago
+
+        q = Subreddit._query(Subreddit.c.author_id == account._id,
+            Subreddit.c._spam == False,
+            sort=desc('_date'),
+            data=False)
+        q._limit = query_limit
+        things = list(q)
+
+        processed = 0
+        for item in things:
+            if processed < spam_limit:
+                processed += 1
+                admintools.spam(item,
+                                auto=False,
+                                moderator_banned=False,
+                                banner=None,
+                                train_spam=True)
+
 admintools = AdminTools()
 
 def cancel_subscription(subscr_id):
@@ -418,10 +438,18 @@ def update_gold_users():
 
 
 def is_banned_domain(dom):
-    return None
+    dom = domain(dom)
+    if dom in g.spam_domains:
+        return True
+    else:
+        return False
 
 def is_shamed_domain(dom):
-    return False, None, None
+    dom = domain(dom)
+    if dom in g.banned_domains:
+        return True, dom, 'banned domain'
+    else:
+        return False, None, None
 
 def bans_for_domain_parts(dom):
     return []

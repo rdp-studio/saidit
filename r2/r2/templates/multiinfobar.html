@@ -112,7 +112,7 @@
   <ul class="subreddits">
   %for sr in thing.srs:
     <li data-name="${sr.name}">
-      <a href="/${g.brander_community_abbr}/${sr.name}">/${g.brander_community_abbr}/${sr.name}</a>
+      <a href="${sr.path}">${sr.display_name_abbr}</a>
       <button class="remove-sr">${_('remove')}</button>
     </li>
   %endfor

@@ -135,7 +135,7 @@ error_list = dict((
         ('CONFIRM', _("please confirm the form")),
         ('CONFLICT', _("conflict error while saving")),
         ('NO_API', _('cannot perform this action via the API')),
-        ('DOMAIN_BANNED', _('%(domain)s is not allowed on reddit: %(reason)s')),
+        ('DOMAIN_BANNED', _('%(domain)s is not allowed on SaidIt: %(reason)s')),
         ('NO_OTP_SECRET', _('you must enable two-factor authentication')),
         ('OTP_ALREADY_ENABLED', _('two-factor authentication is already enabled')),
         ('BAD_IMAGE', _('image problem')),

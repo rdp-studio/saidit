@@ -132,7 +132,10 @@ class BaseSite(object):
 
     @property
     def path(self):
-        return "/" + g.brander_community_abbr + "/%s/" % self.name
+        if self.profile_id:
+            return "/user/%s/" % self.profile_account.name
+        else:
+            return "/" + g.brander_community_abbr + "/%s/" % self.name
 
     @property
     def user_path(self):
@@ -145,6 +148,27 @@ class BaseSite(object):
     @property
     def allows_referrers(self):
         return True
+
+    @property
+    def profile_account(self):
+        if self.profile_id:
+            return Account._byID(self.profile_id)
+        else:
+            return None
+
+    @property
+    def display_name(self):
+        if self.profile_id:
+            return "u/" + self.profile_account.name
+        else:
+            return self.name
+
+    @property
+    def display_name_abbr(self):
+        if self.profile_id:
+            return "u/" + self.profile_account.name
+        else:
+            return "/" + g.brander_community_abbr + "/" + self.name
 
     def is_moderator_with_perms(self, user, *perms):
         if user.is_global_banned:
@@ -275,6 +299,7 @@ class Subreddit(Thing, Printable, BaseSite):
 
         # CUSTOM
         chat_enabled = True,
+        profile_id = 0,
     )
 
     # special attributes that shouldn't set Thing data attributes because they
@@ -437,9 +462,23 @@ class Subreddit(Thing, Printable, BaseSite):
         names, single = tup(names, True)
 
         to_fetch = {}
+        to_fetch_profile = {}
         ret = {}
 
         for name in names:
+            if name.lower().startswith("u/"):
+                from r2.models import Account
+                try:
+                    srid = Account._by_name(name[2:], allow_deleted=True).profile_srid
+                    if srid:
+                        try:
+                            ret[name] = cls._byID(srid)
+                        except:
+                            pass
+                except:
+                    pass
+                continue
+
             try:
                 ascii_only = str(name.decode("ascii", errors="ignore"))
             except UnicodeEncodeError:
@@ -917,6 +956,10 @@ class Subreddit(Thing, Printable, BaseSite):
 
     def is_allowed_to_view(self, user):
         """Returns whether user can view based on permissions and settings"""
+        if self.profile_id:
+            vuser = self.profile_account
+            if getattr(user, '_id', 0) != vuser._id and (vuser._deleted or (vuser._spam and not vuser.banned_profile_visible) or (vuser.in_timeout and not vuser.timeout_expiration)):
+                return False
         if self.type in ('public', 'restricted',
                          'gold_restricted', 'archived'):
             return True
@@ -1845,7 +1888,7 @@ class AllSR(FakeSubreddit):
         # NOTE: sr.allow_top does not affect or filter /s/all/new, in accordance with NewController keep_fn() which does
         #       not check .discoverable.
         filtered_sr_ids = set()
-        if g.allsr_prefilter_allow_top and not (c.user_is_loggedin and c.user_is_admin):
+        if g.allsr_prefilter_allow_top and not (c.user_is_loggedin and (c.user_is_admin or c.user.pref_notall_enabled)):
             if sort != 'new' or (sort == 'new' and g.allow_top_affects_new):
                 from r2.lib.utils import fetch_things2
                 q2 = Subreddit._query(Subreddit.c.allow_top==False,

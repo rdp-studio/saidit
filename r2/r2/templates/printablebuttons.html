@@ -94,6 +94,13 @@
     <li>${ynbutton(_("retry thumb"), _("check back in a few minutes"), "rescrape",
             event_action="retry_thumbnail")}</li>
   %endif
+  %if c.user_is_admin and hasattr(thing, 'thing_takendown'):
+    %if not thing.thing_takendown:
+      <li>${ynbutton(_("takedown"), _("taken down"), "admin/admin_takedown", event_action='admin/admin_takedown')}</li>
+    %else:
+      <li>${ynbutton(_("untakedown"), _("reinstated"), "admin/admin_untakedown", event_action='admin/admin_untakedown')}</li>
+    %endif
+  %endif
 </%def>
 
 <%def name="distinguish_setter(name, value=None, event_action='distinguish')">
@@ -235,8 +242,11 @@
   <span class="big-mod-buttons">
     %if not thing._deleted:
       <span role="radiogroup">
-        ${pretty_button(_("spam"), "big_mod_action", -2, "negative", event_action="spam")}
-        ${pretty_button(_("remove"), "big_mod_action", -1, "neutral", event_action="remove")}
+        %if not getattr(thing, "moderator_banned", None) or getattr(thing, "autobanned", False):
+          ${pretty_button(_("spam"), "big_mod_action", -2, "negative", event_action="spam")}
+          ${pretty_button(_("remove"), "big_mod_action", -1, "neutral", event_action="remove")}
+        %endif
+
         %if getattr(thing, "approval_checkmark", None):
           ${pretty_button(_("reapprove"), "big_mod_action",  1, "positive", event_action="approve")}
         %else:

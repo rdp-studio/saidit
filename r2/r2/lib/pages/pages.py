@@ -1548,7 +1548,7 @@ class MessagePage(Reddit):
                                                sr_path = False))
         if not c.default_sr:
             buttons.append(ModeratorMailButton(
-                _("%(site)s mail") % {'site': c.site.name}, "moderator",
+                _("%(site)s mail") % {'site': c.site.display_name}, "moderator",
                 aliases = ["/about/message/inbox",
                            "/about/message/unread"]))
         return [PageNameNav('nomenu', title = _("message")),
@@ -1585,7 +1585,7 @@ class BoringPage(Reddit):
 
     def __init__(self, pagename, css_class=None, **context):
         self.pagename = pagename
-        name = c.site.name or g.default_sr
+        name = c.site.display_name or g.default_sr
         if css_class:
             self.css_class = css_class
         if "title" not in context:
@@ -2500,9 +2500,9 @@ class ProfilePage(Reddit):
     on the page) CUSTOM SAIDIT: ,
                    NamedButton('gilded') removed"""
 
-    searchbox         = False
-    create_reddit_box = False
-    submit_box        = False
+    searchbox         = True
+    create_reddit_box = True
+    submit_box        = True
     extra_page_classes = ['profile-page']
 
     def __init__(self, user, *a, **kw):
@@ -2521,6 +2521,15 @@ class ProfilePage(Reddit):
                 NamedButton('downvoted', sr_path=False)]
             """
             
+        sr = self.user.profile_sr
+        if sr:
+            mod = False
+            if c.user_is_loggedin:
+                mod = bool(c.user_is_admin
+                           or sr.is_moderator_with_perms(c.user, 'wiki'))
+            if sr._should_wiki and (c.site.wikimode != 'disabled' or mod):
+                if not g.disable_wiki:
+                    main_buttons.append(NavButton('wiki', 'wiki', sr_path=True, css_class='wiki'))
 
         if c.user_is_loggedin and (c.user._id == self.user._id or
                                    c.user_is_admin):
@@ -2595,7 +2604,7 @@ class ProfilePage(Reddit):
         mod_sr_ids = Subreddit.reverse_moderator_ids(self.user)
         all_mod_srs = Subreddit._byID(mod_sr_ids, data=True,
                                       return_dict=False, stale=True)
-        mod_srs = [sr for sr in all_mod_srs if sr.can_view_in_modlist(c.user)]
+        mod_srs = [sr for sr in all_mod_srs if (sr.can_view_in_modlist(c.user) and not sr.profile_id == self.user._id)]
         if mod_srs:
             rb.push(SideContentBox(title=_("moderator of"),
                                    content=[SidebarModList(mod_srs)]))
@@ -6013,7 +6022,7 @@ class SubredditSelector(Templated):
     def subreddit_names(self):
         groups = []
         for title, subreddits in self.subreddits:
-            names = [sr.name for sr in subreddits if sr.can_submit(c.user)]
+            names = [sr.display_name for sr in subreddits if sr.can_submit(c.user)]
             names.sort(key=str.lower)
             groups.append((title, names))
         return groups

@@ -27,6 +27,7 @@ from pylons import app_globals as g
 
 from r2.lib.base import BaseController
 from r2.lib.validator import chkuser
+from r2.lib.db.thing import NotFound
 from r2.models import Subreddit
 
 
@@ -43,6 +44,41 @@ class RedirectController(BaseController):
         if not user:
             abort(400)
         url = "/user/" + user
+        if rest:
+            url += "/" + rest
+        if request.query_string:
+            url += "?" + request.query_string
+        return self.redirect(str(url), code=301)
+
+    def GET_profilesr_redirect(self, username, dest=None, rest=None):
+        from r2.models import Account
+        user = chkuser(username)
+        if not user:
+            abort(400)
+        try:
+            sr = Account._by_name(user, allow_deleted=True).profile_sr
+            if sr:
+                url = "/" + g.brander_community_abbr + "/%s/%s/" % (sr.name, dest)
+            else:
+                abort(404)
+        except NotFound:
+            abort(404)
+        if rest:
+            url += rest
+        if request.query_string:
+            url += "?" + request.query_string
+        return self.redirect(str(url), code=301)
+
+    def GET_profileuser_redirect(self, srname, rest=None):
+        from r2.models import Account
+        try:
+            user = Subreddit._by_name(srname).profile_account
+            if user:
+                url = "/user/" + user.name
+            else:
+                abort(404)
+        except NotFound:
+            abort(404)
         if rest:
             url += "/" + rest
         if request.query_string:

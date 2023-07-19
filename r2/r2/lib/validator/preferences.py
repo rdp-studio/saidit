@@ -117,6 +117,7 @@ PREFS_VALIDATORS = dict(
     # pref_chat_client_user=VChatClientUser('chat_client_user'),
     # pref_chat_client_password=VChatClientAuthToken('chat_client_password'),
     pref_subscriptions_unsubscribe=VOneOf('subscriptions_unsubscribe', SubscriptionsSubscribeMenu._options),
+    pref_notall_enabled=VBoolean("notall_enabled"),
     pref_site_index=VOneOf('site_index', SiteIndexMenu._options),
     pref_site_theme=VOneOf('site_theme', SiteThemeMenu._options),
 )

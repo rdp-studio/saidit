@@ -235,6 +235,7 @@ class Globals(object):
             'hot_max_links_per_subreddit',
             'fetch_title_max_download_kb',
             'globalban_vote_rollback_account_age_days',
+            'spamfilter_karma',
         ],
 
         ConfigValue.float: [
@@ -311,6 +312,9 @@ class Globals(object):
             'known_image_domains',
             'reserved_subdomains',
             'offsite_subdomains',
+            'spam_domains',
+            'banned_domains',
+            'forbidden_phrases',
             'TRAFFIC_LOG_HOSTS',
             'exempt_login_user_agents',
             'autoexpand_media_types',

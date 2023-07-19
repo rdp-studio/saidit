@@ -25,7 +25,7 @@
 <div ${classes("titlebox", "rounded", "filtered-details", thing.css_class)}
      data-path="${c.site.multi_path}">
   <h1 class="hover redditname">
-    ${plain_link(c.site.name, c.site.user_path, _sr_path=False, _class="hover")}
+    ${plain_link(c.site.display_name, c.site.user_path, _sr_path=False, _class="hover")}
   </h1>
 
   <div class="usertext">
@@ -35,7 +35,7 @@
   <ul class="subreddits">
   %for sr in c.site.exclude_srs:
     <li data-name="${sr.name}">
-      <a href="/${g.brander_community_abbr}/${sr.name}" data-name="${sr.name}">/${g.brander_community_abbr}/${sr.name}</a>
+      <a href="${sr.path}" data-name="${sr.name}">${sr.display_name_abbr}</a>
       <button class="remove-sr">${_('remove')}</button>
     </li>
   %endfor

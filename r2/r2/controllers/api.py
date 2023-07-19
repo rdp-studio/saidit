@@ -129,7 +129,7 @@ from r2.lib.csrf import csrf_exempt
 from r2.lib.voting import cast_vote
 
 from r2.models import wiki
-from r2.models.ip import set_account_ip
+# from r2.models.ip import set_account_ip
 from r2.models.recommend import AccountSRFeedback, FEEDBACK_ACTIONS
 from r2.models.rules import SubredditRules
 from r2.models.vote import Vote
@@ -140,6 +140,8 @@ from urlparse import urlparse
 
 from r2.lib.ip_events import account_ids_by_ip
 from r2.models.account import Account
+
+from r2.models.link import spamfilter_check
 
 # CUSTOM: Site Theme
 from r2.lib.validator.preferences import set_prefs
@@ -414,6 +416,8 @@ class ApiController(RedditController):
                 VNotInTimeout().run(target=to)
             m, inbox_rel = Message._new(c.user, to, subject, body, request.ip)
 
+        spamfilter_check(m, c.user, body, subject)
+
         form.set_text(".status", _("your message has been delivered"))
         form.set_inputs(to = "", subject = "", text = "", captcha="")
         queries.new_message(m, inbox_rel)
@@ -567,12 +571,13 @@ class ApiController(RedditController):
         )
 
         if not is_self:
-            ban = is_banned_domain(url)
-            if ban:
+            if is_banned_domain(url) and c.user.spamfilter_applies:
                 g.stats.simple_event('spam.domainban.link_url')
-                admintools.spam(l, banner = "domain (%s)" % ban.banmsg)
-                hooks.get_hook('banned_domain.submit').call(item=l, url=url,
-                                                            ban=ban)
+                admintools.spam(l, banner = "banned domain")
+                #hooks.get_hook('banned_domain.submit').call(item=l, url=url,
+                #                                            ban=ban)
+
+        spamfilter_check(l, c.user, selftext if self else url, title)
 
         if sr.should_ratelimit(c.user, 'link'):
             VRatelimit.ratelimit(rate_user=True, rate_ip = True,
@@ -700,7 +705,7 @@ class ApiController(RedditController):
         See also: [/api/friend](#POST_api_friend).
 
         """
-        if container and container.is_moderator(c.user):
+        if container and container.is_moderator(c.user) and container.profile_id != c.user._id:
             container.remove_moderator(c.user)
             ModAction.create(container, c.user, 'removemoderator', target=c.user,
                              details='remove_self')
@@ -826,6 +831,9 @@ class ApiController(RedditController):
                 if c.user._spam:
                     return
                 VNotInTimeout().run(action_name=action, target=victim)
+            if type == 'moderator' and container.profile_id == c.user._id:
+                # Don't let someone be removed as a mod of their own profile
+                return
         else:
             container = VByName('container').run(container)
             if not container:
@@ -2221,6 +2229,8 @@ class ApiController(RedditController):
             item, inbox_rel = Comment._new(c.user, link, parent_comment,
                                            comment, request.ip)
 
+        spamfilter_check(item, c.user, comment)
+
         if is_message:
             queries.new_message(item, inbox_rel)
         else:
@@ -2340,6 +2350,9 @@ class ApiController(RedditController):
             amqp.add_item('new_message', m._fullname)
 
             queries.new_message(m, inbox_rel)
+
+            spamfilter_check(m, c.user, pm_message, subject)
+            spamfilter_check(inbox_rel, c.user, pm_message, subject)
 
         g.stats.simple_event('share.email_sent', len(emails))
         g.stats.simple_event('share.pm_sent', len(users))
@@ -3029,6 +3042,12 @@ class ApiController(RedditController):
             # Don't allow user in timeout to create a new subreddit
             VNotInTimeout().run(action_name="createsubreddit", target=None)
 
+            # Don't let anyone create someone else's profile sub!
+            if name.lower().startswith("u_"):
+                if name[2:].lower() != c.user.name.lower():
+                    abort(403)
+                kw["profile_id"] = c.user._id
+
             #sending kw is ok because it was sanitized above
             sr = Subreddit._new(name = name, author_id = c.user._id,
                                 ip=request.ip, **kw)
@@ -3038,8 +3057,12 @@ class ApiController(RedditController):
 
             hooks.get_hook("subreddit.new").call(subreddit=sr)
 
-            Subreddit.subscribe_defaults(c.user)
-            sr.add_subscriber(c.user)
+            if name.lower().startswith("u_"):
+                c.user.profile_srid = sr._id
+                c.user._commit()
+            else:
+                Subreddit.subscribe_defaults(c.user)
+                sr.add_subscriber(c.user)
             sr.add_moderator(c.user)
 
             if not sr.hide_contributors:
@@ -3828,7 +3851,7 @@ class ApiController(RedditController):
 
         # add this ip to the user's account so they can sign in even if
         # their account is being brute forced by a third party.
-        set_account_ip(user, request.ip, c.start_time)
+        # set_account_ip(user, request.ip, c.start_time)
 
         # if the token is for the current user, their cookies will be
         # invalidated and they'll have to log in again.
@@ -5336,35 +5359,8 @@ class ApiController(RedditController):
                    recipient=VExistingUname("recipient"),
                    notes=VLength("notes", max_length = 1000, empty_error=None))
     def POST_editglobalban(self, form, jquery, globalban, colliding_globalban, recipient, notes):
-
-        # INVALID_OPTION is set by VGlobalBanByUsername
-        if form.has_errors("recipient", errors.INVALID_OPTION):
-            form.set_text(".status", "user already globally banned")
-            return
-
-        if form.has_error():
-            return
-
-        if recipient is None:
-            form.set_text(".status", "user does not exist")
-            return
-
-        if globalban is None:
-            GlobalBan._new(recipient._id, notes)
-            form.set_html(".status", "saved, <a href='#' onclick='location.reload();'>reload</a> to see changes")
-
-            if g.globalban_vote_rollback:
-                min_account_age = timedelta(days=g.globalban_vote_rollback_account_age_days)
-                if g.globalban_vote_rollback_account_age_days == -1:
-                    admintools.rollback_account_votes(recipient)
-                elif recipient._age < timedelta(days=1) or recipient._age <= min_account_age:
-                    admintools.rollback_account_votes(recipient)
-            return
-
-        globalban.notes = notes
-        globalban._commit()
-        form.set_html(".status", _('saved, <a href="#" onclick="location.reload();">reload</a> to see changes'))
-
+        form.set_text(".status", "global bans are deprecated, use the ban tools on the user's profile page instead")
+        return
 
     @validatedForm(VAdmin(),
                 VModhash(),
@@ -5474,5 +5470,6 @@ class ApiController(RedditController):
 
         admintools.spam_account_links(recipient)
         admintools.spam_account_comments(recipient)
+        admintools.spam_account_subs(recipient)
 
         form.set_html(".status", _('somebody set up us the bomb'))

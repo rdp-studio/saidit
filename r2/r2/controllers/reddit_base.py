@@ -143,8 +143,6 @@ from r2.models import (
 )
 from r2.lib.db import tdb_cassandra
 
-from r2.models.ip import set_account_ip
-
 
 # Cookies which may be set in a response without making it uncacheable
 CACHEABLE_COOKIES = ()
@@ -300,6 +298,7 @@ def set_obey_over18():
     c.obey_over18 = request.GET.get("obey_over18") == "true"
 
 valid_ascii_domain = re.compile(r'\A(\w[-\w]*\.)+[\w]+\Z')
+user_pattern = re.compile(r'^/user/([^/]{2,})')
 def set_subreddit():
     #the r parameter gets added by javascript for API requests so we
     #can reference c.site in api.py
@@ -333,6 +332,18 @@ def set_subreddit():
                 domain = ".".join((g.domain_prefix, domain))
             path = '%s://%s%s' % (g.default_scheme, domain, sr.path)
             abort(301, location=BaseController.format_output_url(path))
+        else:
+            # Set user profile sub if available
+            path = request.environ.get("PATH_INFO")
+            uname = user_pattern.match(path)
+            if uname:
+                uname = uname.groups()[0]
+                try:
+                    vuser = Account._by_name(uname, allow_deleted=True)
+                    if vuser.profile_srid:
+                        c.site = vuser.profile_sr
+                except:
+                    pass
     elif '+' in sr_name:
         name_filter = lambda name: Subreddit.is_valid_name(name,
             allow_language_srs=True)
@@ -1249,7 +1260,6 @@ class OAuth2OnlyController(OAuth2ResourceController):
         OAuth2ResourceController.pre(self)
         if request.method != "OPTIONS":
             self.authenticate_with_token()
-            set_account_ip(c.user, request.ip)
             self.set_up_user_context()
             self.run_sitewide_ratelimits()
 
@@ -1368,7 +1378,6 @@ class RedditController(OAuth2ResourceController):
                     c.user._commit()
 
         if c.user_is_loggedin:
-            set_account_ip(c.user, request.ip)
             self.set_up_user_context()
             c.modhash = generate_modhash()
             c.user_is_admin = maybe_admin and c.user.name in g.admins
@@ -1453,21 +1462,27 @@ class RedditController(OAuth2ResourceController):
                         _("gold members only"),
                         content=pages.GoldOnlyInterstitial(
                             sr_name=c.site.name,
+                            sr_display_name=c.site.display_name,
                             sr_description=c.site.public_description,
                         ),
                     )
                     request.environ['usable_error_content'] = errpage.render()
                     self.abort403()
-                elif not allowed_to_view:
+                elif not allowed_to_view and (c.site.type == 'private' or c.site.type == 'employees_only'):
                     errpage = pages.InterstitialPage(
                         _("private"),
                         content=pages.PrivateInterstitial(
                             sr_name=c.site.name,
+                            sr_display_name=c.site.display_name,
                             sr_description=c.site.public_description,
                         ),
                     )
                     request.environ['usable_error_content'] = errpage.render()
                     self.abort403()
+                elif c.site.profile_id:
+                    self.allow_stylesheets = False
+                    if not request.path.startswith('/user/'):
+                        self.abort404()
                 else:
                     if c.render_style != 'html':
                         self.abort403()

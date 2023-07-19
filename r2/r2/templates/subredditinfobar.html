@@ -34,7 +34,7 @@
 
 <div class="titlebox">
   <h1 class="hover redditname">
-    ${plain_link(thing.sr.name, thing.sr.path, _sr_path=False, _class="hover")}
+    ${plain_link(thing.sr.display_name, thing.sr.path, _sr_path=False, _class="hover")}
   </h1>
 
   %if thing.quarantine:
@@ -45,7 +45,7 @@
       </div>
       <form method='post' action='/api/quarantine_optout'>
         <input type="hidden" name="uh" value="${c.modhash}"/>
-        <input type="hidden" name="sr_name" value="${thing.sr.name}"/>
+        <input type="hidden" name="sr_name" value="${thing.sr.display_name}"/>
         <button class="c-btn btn-quarantine" name="submit" value="submit" type="submit">
           ${_("Leave this community")}
         </button>

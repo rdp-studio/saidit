@@ -592,7 +592,7 @@ class NewController(ListingWithPromos):
     def keep_fn(self):
         def keep(item):
             wouldkeep = item.keep_item(item)
-            if g.allow_top_affects_new and (isinstance(c.site, AllSR) or (isinstance(c.site, DynamicSR) and c.site.name == g.all_name)) and not (c.user_is_loggedin and c.user_is_admin):
+            if g.allow_top_affects_new and (isinstance(c.site, AllSR) or (isinstance(c.site, DynamicSR) and c.site.name == g.all_name)) and not (c.user_is_loggedin and (c.user_is_admin or c.user.pref_notall_enabled)):
                 if hasattr(item, 'subreddit') and not item.subreddit.discoverable:
                     return False
                 elif hasattr(item, 'discoverable') and not item.discoverable:
@@ -1015,6 +1015,11 @@ class UserController(ListingController):
                          c.user_is_admin or
                          c.user_is_sponsor and where == "promoted")):
                 return self.abort404()
+
+        # only allow admins to view users with a private profile
+        profile_sr = vuser.profile_sr
+        if profile_sr and not profile_sr.can_view(c.user):
+            return self.abort403()
 
         if where in ('upvoted', 'downvoted') and not votes_visible(vuser):
             return self.abort403()

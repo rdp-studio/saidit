@@ -66,6 +66,9 @@ def make_map(config):
     mc('/api/admin/unsuspend_user', controller='admintool', action='unsuspend_user')
     mc('/api/admin/spiderban_user', controller='admintool', action='spiderban_user')
 
+    mc('/api/admin/admin_takedown', controller='admintool', action='admin_takedown')
+    mc('/api/admin/admin_untakedown', controller='admintool', action='admin_untakedown')
+
     mc('/robots.txt', controller='robots', action='robots')
     mc('/crossdomain', controller='robots', action='crossdomain')
 
@@ -171,6 +174,11 @@ def make_map(config):
     mc('/admin/ipbans', controller='ipbans')
     mc('/admin/nukecontent', controller='nukecontent')
 
+    mc('/user/:username/about/*rest', controller='redirect', action='profilesr_redirect', dest='about')
+    mc('/user/:username/wiki', controller='redirect', action='profilesr_redirect', dest='wiki')
+    mc('/user/:username/wiki/*rest', controller='redirect', action='profilesr_redirect', dest='wiki')
+    mc('/user/:username/submit', controller='redirect', action='profilesr_redirect', dest='submit')
+
     mc('/user/:username/about', controller='user', action='about',
        where='overview')
     mc('/user/:username/trophies', controller='user', action='trophies')
@@ -232,7 +240,7 @@ def make_map(config):
 
     mc('/u/:username', controller='redirect', action='user_redirect')
     mc('/u/:username/*rest', controller='redirect', action='user_redirect')
-    
+
     # preserve timereddit URLs from 4/1/2012
     mc('/t/:timereddit', controller='redirect', action='timereddit_redirect')
     mc('/t/:timereddit/*rest', controller='redirect',

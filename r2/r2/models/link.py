@@ -1553,7 +1553,7 @@ class Comment(Thing, Printable):
                 return False
 
         # CUSTOM: allow_top filtering for /s/all/comments
-        if g.allow_top_affects_new and not wrapped.subreddit.allow_top and (isinstance(c.site, AllSR) or (isinstance(c.site, DynamicSR) and c.site.name == g.all_name)):
+        if g.allow_top_affects_new and not wrapped.subreddit.allow_top and (isinstance(c.site, AllSR) or (isinstance(c.site, DynamicSR) and c.site.name == g.all_name)) and not (c.user_is_loggedin and c.user.pref_notall_enabled):
             return False
 
         return True
@@ -3261,3 +3261,28 @@ class CommentVisitsByUser(tdb_cassandra.View):
 
         cls.add_visit(user, link, visit_time)
         return visits
+
+def spamfilter_check(thing, account, body, title = ''):
+    from r2.models import admintools
+
+    if not account.spamfilter_applies:
+        return
+
+    body = body.lower()
+    title = title.lower()
+
+    for domain in g.banned_domains:
+        if domain in body or domain in title:
+            g.stats.simple_event('spam.domainban.message')
+            admintools.spam(thing, banner = "banned domain")
+
+    for domain in g.spam_domains:
+        if domain in body or domain in title:
+            g.stats.simple_event('spam.domainban.message')
+            admintools.spam(thing, banner = "banned domain")
+
+    for phrase in g.forbidden_phrases:
+        phrase = phrase.lower()
+        if phrase in body or phrase in title:
+            g.stats.simple_event('spam.phraseban.message')
+            admintools.spam(thing, banner = "banned phrase")

@@ -37,9 +37,9 @@
     <div class="md">
       <h3>${self.interstitial_title()}</h3>
 
-      %if thing.sr_name and thing.sr_description:
+      %if getattr(thing, 'sr_display_name', None) and thing.sr_description:
         <div class="interstitial-subreddit-description">
-          <h5>${_("%s/%s") % (g.brander_community_abbr, thing.sr_name)}</h5>
+          <h5>${_("%s") % (thing.sr_display_name)}</h5>
           ${md(thing.sr_description)}
         </div>
       %endif

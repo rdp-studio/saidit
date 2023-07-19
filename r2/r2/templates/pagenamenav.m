@@ -24,7 +24,7 @@
 
 <%def name="subreddit()">
   <span class="hover pagename redditname">
-    ${plain_link(c.site.name, c.site.user_path, _sr_path=False)}
+    ${plain_link(c.site.display_name, c.site.user_path, _sr_path=False)}
     % if hasattr(thing, "title"):
       : ${thing.title}
     % endif
@@ -34,14 +34,14 @@
 <%def name="domain()">
   <div id="sr-name-box">
     <span class="hover pagename redditname">
-      ${plain_link(getattr(c.site, "idn", c.site.name), c.site.user_path, _sr_path=False)}
+      ${plain_link(getattr(c.site, "idn", c.site.display_name), c.site.user_path, _sr_path=False)}
       % if hasattr(thing, "title"):
         : ${thing.title}
       % endif
     </span>
     % if hasattr(c.site, "idn"):
     <span class="help help-hoverable tooltip">
-      ${c.site.name}
+      ${c.site.display_name}
       <div id="idn-help" class="hover-bubble help-bubble anchor-top-left">
         <div class="help-section help-idn">
           <p>
